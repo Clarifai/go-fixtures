@@ -1,11 +1,11 @@
 package fixtures
 
 import (
-	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"strings"
 
+	"database/sql"
 	"gopkg.in/yaml.v2"
 )
 
@@ -20,14 +20,14 @@ func NewFileError(filename string, cause error) error {
 }
 
 // Load processes a YAML fixture and inserts/updates the database accordingly
-func Load(data []byte, db *sql.DB, driver string, oneTransactionPerRow ...bool) error {
+func Load(data []byte, db *sql.DB, driver string, oneTransactionPerRow bool, allowUpsert bool) error {
 	// Unmarshal the YAML data into a []Row slice
 	var rows []Row
 	if err := yaml.Unmarshal(data, &rows); err != nil {
 		return err
 	}
 
-	doOneTransactionPerRow := len(oneTransactionPerRow) > 0 && oneTransactionPerRow[0]
+	doOneTransactionPerRow := oneTransactionPerRow
 
 	var tx *sql.Tx
 	if !doOneTransactionPerRow {
@@ -53,20 +53,20 @@ func Load(data []byte, db *sql.DB, driver string, oneTransactionPerRow ...bool) 
 		row.Init()
 		s := strings.Split(row.Table, ".")
 		switch {
-			case len(s) > 2:
-				return fmt.Errorf("Table name wrong format in yaml")
-			case len(s) == 2:
-				q := fmt.Sprintf(`SET LOCAL SEARCH_PATH TO %s`, s[0])
-				_, err := tx.Exec(q)
-				if err != nil {
-					tx.Rollback() // rollback the transaction
-					return NewProcessingError(i+1, err)
-				}
-				row.Table = s[1]
-			case len(s) == 1:
-				// table name without schema, do nothing
-			default:
-				return fmt.Errorf("Table nmae is empty in yaml")
+		case len(s) > 2:
+			return fmt.Errorf("Table name wrong format in yaml")
+		case len(s) == 2:
+			q := fmt.Sprintf(`SET LOCAL SEARCH_PATH TO %s`, s[0])
+			_, err := tx.Exec(q)
+			if err != nil {
+				tx.Rollback() // rollback the transaction
+				return NewProcessingError(i+1, err)
+			}
+			row.Table = s[1]
+		case len(s) == 1:
+			// table name without schema, do nothing
+		default:
+			return fmt.Errorf("Table nmae is empty in yaml")
 		}
 
 		// Run a SELECT query to find out if we need to insert or UPDATE
@@ -102,6 +102,10 @@ func Load(data []byte, db *sql.DB, driver string, oneTransactionPerRow ...bool) 
 				}
 			}
 		} else {
+			if !allowUpsert {
+				return fmt.Errorf("Duplicate key err. %d rows", count)
+			}
+
 			// Primary key found, let's run UPDATE query
 			updateQuery := fmt.Sprintf(
 				`UPDATE "%s" SET %s WHERE %s`,
@@ -144,7 +148,7 @@ func Load(data []byte, db *sql.DB, driver string, oneTransactionPerRow ...bool) 
 }
 
 // LoadFile ...
-func LoadFile(filename string, db *sql.DB, driver string) error {
+func LoadFile(filename string, db *sql.DB, driver string, oneTransactionPerRow bool, allowUpsert bool) error {
 	// Read fixture data from the file
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -152,13 +156,13 @@ func LoadFile(filename string, db *sql.DB, driver string) error {
 	}
 
 	// Insert the fixture data
-	return Load(data, db, driver)
+	return Load(data, db, driver, oneTransactionPerRow, allowUpsert)
 }
 
 // LoadFiles ...
-func LoadFiles(filenames []string, db *sql.DB, driver string) error {
+func LoadFiles(filenames []string, db *sql.DB, driver string, oneTransactionPerRow bool, allowUpsert bool) error {
 	for _, filename := range filenames {
-		if err := LoadFile(filename, db, driver); err != nil {
+		if err := LoadFile(filename, db, driver, oneTransactionPerRow, allowUpsert); err != nil {
 			return err
 		}
 	}

@@ -38,7 +38,7 @@ func TestLoadWorksWithValidDataPostgres(t *testing.T) {
 	}
 
 	// Let's load the fixture, since the database is empty, this should run inserts
-	err = Load([]byte(testData), db, "postgres")
+	err = Load([]byte(testData), db, "postgres", false, false)
 
 	// Error should be nil
 	assert.Nil(t, err)
@@ -151,7 +151,7 @@ func TestLoadWorksWithValidDataPostgres(t *testing.T) {
 	}
 
 	// Let's reload the fixture, this should run updates
-	err = Load([]byte(testData), db, "postgres")
+	err = Load([]byte(testData), db, "postgres", false, false)
 
 	// Error should be nil
 	assert.Nil(t, err)
@@ -279,7 +279,7 @@ func TestLoadFileWorksWithValidFilePostgres(t *testing.T) {
 	assert.Equal(t, 0, count)
 
 	// Let's load the fixture, since the database is empty, this should run inserts
-	err = LoadFile(fixtureFile, db, "postgres")
+	err = LoadFile(fixtureFile, db, "postgres", false, false)
 
 	// Error should be nil
 	assert.Nil(t, err)
@@ -334,7 +334,7 @@ func TestLoadFileWorksWithValidFilePostgres(t *testing.T) {
 	}
 
 	// Let's reload the fixture, this should run updates
-	err = LoadFile(fixtureFile, db, "postgres")
+	err = LoadFile(fixtureFile, db, "postgres", false, false)
 
 	// Error should be nil
 	assert.Nil(t, err)
@@ -370,7 +370,7 @@ func TestLoadFileFailssWithMissingFilePostgres(t *testing.T) {
 	}
 
 	// Let's load the fixture, since the database is empty, this should run inserts
-	err = LoadFile("bad_filename.yml", db, "postgres")
+	err = LoadFile("bad_filename.yml", db, "postgres", false, false)
 
 	// Error should be nil
 	assert.EqualError(t, err, "Error loading file bad_filename.yml: open bad_filename.yml: no such file or directory")
@@ -408,7 +408,7 @@ func TestLoadFilesWorksWithValidFilesPostgres(t *testing.T) {
 	assert.Equal(t, 0, count)
 
 	// Let's load the fixture, since the database is empty, this should run inserts
-	err = LoadFiles(fixtureFiles, db, "postgres")
+	err = LoadFiles(fixtureFiles, db, "postgres", false, false)
 
 	// Error should be nil
 	assert.Nil(t, err)
@@ -424,7 +424,7 @@ func TestLoadFilesWorksWithValidFilesPostgres(t *testing.T) {
 	assert.Equal(t, 1, count)
 
 	// Let's reload the fixtures, this should run updates
-	err = LoadFiles(fixtureFiles, db, "postgres")
+	err = LoadFiles(fixtureFiles, db, "postgres", false, false)
 
 	// Error should be nil
 	assert.Nil(t, err)
@@ -475,7 +475,7 @@ func TestLoadFilesFailsWithABadFilePostgres(t *testing.T) {
 	}
 
 	// Let's load the fixture, since the database is empty, this should run inserts
-	err = LoadFiles(badList, db, "postgres")
+	err = LoadFiles(badList, db, "postgres", false, false)
 
 	// Error should be nil
 	assert.EqualError(t, err, "Error loading file bad_file: open bad_file: no such file or directory")
