@@ -148,21 +148,25 @@ func Load(data []byte, db *sql.DB, driver string, oneTransactionPerRow bool, all
 }
 
 // LoadFile ...
-func LoadFile(filename string, db *sql.DB, driver string, oneTransactionPerRow bool, allowUpsert bool) error {
+func LoadFile(filename string, db *sql.DB, driver string, allowUpsert ...bool) error {
 	// Read fixture data from the file
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return NewFileError(filename, err)
 	}
 
+	upsert := false
+	if len(allowUpsert) > 0 {
+		upsert = allowUpsert[0]
+	}
 	// Insert the fixture data
-	return Load(data, db, driver, oneTransactionPerRow, allowUpsert)
+	return Load(data, db, driver, false, upsert)
 }
 
 // LoadFiles ...
-func LoadFiles(filenames []string, db *sql.DB, driver string, oneTransactionPerRow bool, allowUpsert bool) error {
-	for _, filename := range filenames {
-		if err := LoadFile(filename, db, driver, oneTransactionPerRow, allowUpsert); err != nil {
+func LoadFiles(filenames []string, db *sql.DB, driver string, allowUpsert ...bool) error {
+	for _, filename := range filenames {s
+		if err := LoadFile(filename, db, driver, allowUpsert...); err != nil {
 			return err
 		}
 	}
