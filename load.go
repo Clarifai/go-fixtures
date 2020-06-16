@@ -20,14 +20,12 @@ func NewFileError(filename string, cause error) error {
 }
 
 // Load processes a YAML fixture and inserts/updates the database accordingly
-func Load(data []byte, db *sql.DB, driver string, oneTransactionPerRow bool, allowUpsert bool) error {
+func Load(data []byte, db *sql.DB, driver string, doOneTransactionPerRow bool, allowUpsert bool) error {
 	// Unmarshal the YAML data into a []Row slice
 	var rows []Row
 	if err := yaml.Unmarshal(data, &rows); err != nil {
 		return err
 	}
-
-	doOneTransactionPerRow := oneTransactionPerRow
 
 	var tx *sql.Tx
 	if !doOneTransactionPerRow {
@@ -165,7 +163,7 @@ func LoadFile(filename string, db *sql.DB, driver string, allowUpsert ...bool) e
 
 // LoadFiles ...
 func LoadFiles(filenames []string, db *sql.DB, driver string, allowUpsert ...bool) error {
-	for _, filename := range filenames {s
+	for _, filename := range filenames {
 		if err := LoadFile(filename, db, driver, allowUpsert...); err != nil {
 			return err
 		}
