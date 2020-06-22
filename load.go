@@ -101,7 +101,7 @@ func Load(data []byte, db *sql.DB, driver string, doOneTransactionPerRow bool, a
 			}
 		} else {
 			if !allowUpsert {
-				return fmt.Errorf("Duplicate key err. %d rows", count)
+				return fmt.Errorf("Duplicate key err. %d row(s) in table %s", count, row.Table)
 			}
 
 			// Primary key found, let's run UPDATE query
